@@ -46,7 +46,7 @@ class Bloc:
             else:
                 process = self.__event_map[type(event)]
 
-            process(self.__emit)
+            process(event, self.__emit)
             self.__event_queue.pop(0)
         else:
             self.__event_queue_lock.release()

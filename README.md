@@ -32,10 +32,10 @@ class CounterBloc(Bloc):
         self.on(Events.increment, self.__increment)
         self.on(Events.decrement, self.__decrement)
 
-    def __increment(self, emit):
+    def __increment(self, event, emit):
         emit(self.current_state() + 1)
 
-    def __decrement(self, emit):
+    def __decrement(self, event, emit):
         emit(self.current_state() - 1)
 
 ```
