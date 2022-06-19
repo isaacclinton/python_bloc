@@ -20,6 +20,8 @@ class Bloc:
     def on(self, event_type, process):
         if event_type in self.__event_map:
             raise Exception(f"{event_type} already registered")
+        if not isinstance(event_type, Enum):
+            event_type = event_type.__name__
         self.__event_map[event_type] = process
 
     def __emit(self, state):
@@ -41,10 +43,7 @@ class Bloc:
         self.__event_queue_lock.acquire()
         if len(self.__event_queue) > 0:
             event = self.__event_queue[0]
-            if isinstance(event, Enum):
-                process = self.__event_map[event]
-            else:
-                process = self.__event_map[type(event)]
+            process = self.__event_map[event]
 
             process(event, self.__emit)
             self.__event_queue.pop(0)
@@ -61,7 +60,7 @@ class Bloc:
         if isinstance(event, Enum):
             self.__event_queue.append(event)
         else:
-            self.__event_queue.append(type(event))
+            self.__event_queue.append(event.__class__.__name__)
         self.__event_queue_lock.release()
         self.__execute_next_event()
 
