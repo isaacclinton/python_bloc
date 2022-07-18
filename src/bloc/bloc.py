@@ -9,8 +9,8 @@ class Bloc:
         self.__listeners = []
         self.__event_map = {}
         self.__event_queue = []
-        self.__event_queue_lock = threading.Lock()
-        self.__running_lock = threading.Lock()
+        self.__event_queue_lock = threading.RLock()  # using a reentrant lock, so that an event can be added while emit is taking place(on the same thread)
+        self.__running_lock = threading.RLock()
         self.__observer = None
         self.__state = initial_state
 
@@ -30,7 +30,8 @@ class Bloc:
         """
         old_state = self.__state
         new_state = state
-        if old_state == new_state:
+        should_emit = old_state != new_state
+        if not should_emit:
             return
         self.__state = new_state
         if self.__observer is not None:
@@ -46,7 +47,11 @@ class Bloc:
             process = self.__event_map[event]
 
             process(event, self.__emit)
-            self.__event_queue.pop(0)
+
+            # works fine most of the time without checking if the event_queue is empty
+            # but just to make unsafe implementation doesn't cause IndexError while popping
+            if len(self.__event_queue) > 0:
+                self.__event_queue.pop(0)
         else:
             self.__event_queue_lock.release()
             self.__running_lock.release()
